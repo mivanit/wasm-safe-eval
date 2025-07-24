@@ -1,7 +1,14 @@
 [project]
-name = "wasm-safe-eval"
-version = "0.1.0"
-description = "evaluate/execute python code in a safe sandbox using WASM and RustPython "
-readme = "README.md"
-requires-python = ">=3.10"
-dependencies = []
+	name = "wasm-safe-eval"
+	version = "0.1.0"
+	description = "evaluate/execute python code in a safe sandbox using WASM and RustPython "
+	readme = "README.md"
+	requires-python = ">=3.10"
+	dependencies = []
+
+[tool.wasm-safe-eval]
+	rustpython-version = "0.3.0"
+
+[build-system]
+	requires = ["hatchling"]
+	build-backend = "hatchling.build"
