@@ -23,7 +23,7 @@ jobs:
       with:
         version: "latest"
     
-    - name: Install package and dependencies
+    - name: Install package and dev dependencies
       run: uv sync --dev
 
     - name: Install wasmtime thru package
@@ -41,5 +41,8 @@ jobs:
         toolchain: stable
         targets: wasm32-wasi
     
-    - name: Build WASM binary
+    - name: Build WASM binary for package
       run: make build
+
+    - name: Run tests with rebuilt binary
+      run: make check
