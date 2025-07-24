@@ -27,10 +27,19 @@ jobs:
       run: uv sync --dev
 
     - name: Install wasmtime thru package
-      run: uv run python -m wasm_safe_eval.install_wasmtime    
+      run: uv run python -m wasm_safe_eval.install_wasmtime --confirm
     
     - name: Verify wasmtime installation
       run: wasmtime --version
 
     - name: Run tests
       run: make check
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+        targets: wasm32-wasi
+    
+    - name: Build WASM binary
+      run: make build
