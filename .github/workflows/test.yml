@@ -29,8 +29,9 @@ jobs:
     - name: Install wasmtime thru package
       run: uv run python -m wasm_safe_eval.install_wasmtime --confirm
     
+    # TODO: manual path here bc github actions weird??
     - name: Verify wasmtime installation
-      run: wasmtime --version
+      run: /home/runner/.wasmtime/bin/wasmtime --version
 
     - name: Run tests
       run: make check
