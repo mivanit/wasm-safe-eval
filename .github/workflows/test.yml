@@ -39,8 +39,7 @@ jobs:
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
-        targets: wasm32-wasi
+        targets: wasm32-wasip1
     
     - name: Build WASM binary for package
       run: make build
