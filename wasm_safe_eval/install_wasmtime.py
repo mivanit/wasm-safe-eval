@@ -14,7 +14,7 @@ _DIV: str = "=" * shutil.get_terminal_size().columns
 SOURCE_URL: str = "https://wasmtime.dev/install.sh"
 
 
-def install_wasmtime() -> None:
+def install_wasmtime(confirm: bool = False) -> None:
     f"""Install wasmtime from {SOURCE_URL}"""
     # see if it's already installed
     wasmtime_exec: str | None = _try_find_wasmtime()
@@ -36,10 +36,11 @@ def install_wasmtime() -> None:
         "This will install the `wasmtime` binary for wasm-safe-eval package, via the following executed in shell:"
     )
     print(cmd)
-    print("You can also run this manually. Continue? [y/N]")
-    if input().strip().lower() != "y":
-        print("Installation aborted.")
-        sys.exit(0)
+    if not confirm:
+        print("You can also run this manually. Continue? [y/N]")
+        if input().strip().lower() != "y":
+            print("Installation aborted.")
+            sys.exit(0)
 
     # Run the official wasmtime installer
     print("Installing wasmtime...")
@@ -61,4 +62,15 @@ def install_wasmtime() -> None:
 
 
 if __name__ == "__main__":
-    install_wasmtime()
+    import argparse
+
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(
+        description="Install wasmtime binary for wasm-safe-eval package."
+    )
+    parser.add_argument(
+        "--confirm",
+        action="store_true",
+        help="Skip confirmation.",
+    )
+    args: argparse.Namespace = parser.parse_args()
+    install_wasmtime(confirm=args.confirm)
