@@ -3,10 +3,17 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from wasm_safe_eval._paths import WASM_RUSTPYTHON_PATH, _try_find_wasmtime
 from wasm_safe_eval._exceptions import WasmtimeNotFoundError
+
+
+class SafeEvalResult(NamedTuple):
+    """Result of a safe evaluation."""
+    stdout: str
+    stderr: str
+    returncode: int
 
 
 def safe_eval(
@@ -61,9 +68,14 @@ def safe_eval(
         )
     finally:
         # Clean up temporary file
-        os.unlink(temp_filename)
+        # os.unlink(temp_filename)
+        print(temp_filename)
 
-    return completed.stdout, completed.stderr, completed.returncode
+    return SafeEvalResult(
+        stdout=completed.stdout,
+        stderr=completed.stderr,
+        returncode=completed.returncode,
+    )
 
 
 FUNC_CALL_TEMPLATE: str = '''
@@ -106,11 +118,18 @@ class _NoResultSentinel:
         return self.message
 
 
+class FuncCallResult(NamedTuple):
+    """Result of a function call in a WebAssembly RustPython environment."""
+    result: Any
+    stderr: str
+    returncode: int
+
+
 def safe_func_call(
     code: str,
     args: list,
     kwargs: dict,
-    func_name: str = "f",
+    func_name: str,
     wasmtime_exec: str | None = None,
     wasm_rustpython_path: Path = WASM_RUSTPYTHON_PATH,
 ) -> tuple[Any, str, int]:
@@ -136,8 +155,8 @@ def safe_func_call(
     except Exception as e:
         stderr += f"\nError parsing stdout: {e}"
 
-    return (
-        result,
-        stderr,
-        returncode,
+    return FuncCallResult(
+        result=result,
+        stderr=stderr,
+        returncode=returncode,
     )

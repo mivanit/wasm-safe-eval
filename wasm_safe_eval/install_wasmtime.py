@@ -19,7 +19,7 @@ def install_wasmtime() -> None:
     # see if it's already installed
     wasmtime_exec: str | None = _try_find_wasmtime()
     if wasmtime_exec:
-        print(f"wasmtime already installed at: {wasmtime_exec}\nexiting.")
+        print(f"exiting: wasmtime already installed at: {wasmtime_exec}")
         return
 
     # Check platform
