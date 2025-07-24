@@ -1,5 +1,4 @@
 import json
-import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -11,14 +10,16 @@ from wasm_safe_eval._exceptions import WasmtimeNotFoundError
 
 class SafeEvalResult(NamedTuple):
     """Result of a safe evaluation."""
+
     stdout: str
     stderr: str
     returncode: int
 
 
+# TODO: add maximum memory usage via `ulimit`
 def safe_eval(
     code: str,
-    timeout: int| None = None,
+    timeout: float | None = None,
     wasmtime_exec: str | None = None,
     wasm_rustpython_path: Path = WASM_RUSTPYTHON_PATH,
 ) -> tuple[str, str, int]:
@@ -56,7 +57,7 @@ def safe_eval(
             wasmtime_exec,
             f"--dir={temp_dir}",
             str(wasm_rustpython_path),
-            temp_file_path,
+            str(temp_file_path),
         ]
 
         completed: subprocess.CompletedProcess[str] = subprocess.run(
@@ -64,8 +65,8 @@ def safe_eval(
             text=True,  # decode to str instead of bytes
             capture_output=True,  # capture both stdout and stderr
             check=False,  # do not raise on non‑zero exit
+            timeout=timeout,  # apply timeout if specified
         )
-        
 
     return SafeEvalResult(
         stdout=completed.stdout,
@@ -116,6 +117,7 @@ class _NoResultSentinel:
 
 class FuncCallResult(NamedTuple):
     """Result of a function call in a WebAssembly RustPython environment."""
+
     result: Any
     stderr: str
     returncode: int
@@ -126,6 +128,7 @@ def safe_func_call(
     args: list,
     kwargs: dict,
     func_name: str,
+    timeout: float | None = None,
     wasmtime_exec: str | None = None,
     wasm_rustpython_path: Path = WASM_RUSTPYTHON_PATH,
 ) -> tuple[Any, str, int]:
@@ -139,7 +142,8 @@ def safe_func_call(
     )
 
     stdout, stderr, returncode = safe_eval(
-        code_augmented,
+        code=code_augmented,
+        timeout=timeout,
         wasmtime_exec=wasmtime_exec,
         wasm_rustpython_path=wasm_rustpython_path,
     )
