@@ -57,7 +57,8 @@ def install_wasmtime(confirm: bool = False) -> None:
 
     print(_DIV)
     print(
-        "wasmtime installed successfully! You may need to restart your terminal for changes to take effect."
+        f"wasmtime installed successfully to: {_try_find_wasmtime() = }\n"
+        "You may need to restart your terminal for changes to take effect."
     )
 
 
