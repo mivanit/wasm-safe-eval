@@ -5,13 +5,14 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from wasm_safe_eval._paths import WASM_RUSTPYTHON_PATH, WASMTIME_EXEC, _try_find_wasmtime
+from wasm_safe_eval._paths import WASM_RUSTPYTHON_PATH, _try_find_wasmtime
+from wasm_safe_eval._exceptions import WasmtimeNotFoundError
 
 
 
 def safe_eval(
     code: str,
-    wasmtime_exec: str = WASMTIME_EXEC,
+    wasmtime_exec: str | None = None,
     wasm_rustpython_path: Path = WASM_RUSTPYTHON_PATH,
 ) -> tuple[str, str, int]:
     """safely execute a Python code snippet in a WebAssembly RustPython environment.
@@ -28,19 +29,18 @@ def safe_eval(
     - `tuple[str, str, int]`
 		(stdout, stderr, returncode)
     """
+    
+    # Get wasmtime executable if not provided
+    if wasmtime_exec is None:
+        wasmtime_exec = _try_find_wasmtime()
+        if wasmtime_exec is None:
+            raise WasmtimeNotFoundError(
+                "wasmtime executable not found.\n"
+                "Please install it by running: python -m wasm_safe_eval.install_wasmtime"
+            )
 
-    # Check platform
-    _check_platform()
-    
-    # Find wasmtime if not explicitly provided
-    if wasmtime_exec == WASMTIME_EXEC:
-        wasmtime_exec = _find_wasmtime()
-    
-    # Check that rustpython.wasm exists
-    if not os.path.exists(wasm_rustpython_path):
-        raise FileNotFoundError(f"RustPython WASM file not found at: {wasm_rustpython_path}")
-    
     # Write code to temporary file for secure execution
+    temp_filename: str
     with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tf:
         tf.write(code)
         tf.flush()
@@ -67,7 +67,7 @@ def safe_eval(
     return completed.stdout, completed.stderr, completed.returncode
 
 
-FUNC_CALL_TEMPLATE: str = """
+FUNC_CALL_TEMPLATE: str = '''
 # implemented function
 # ==============================
 {func_code}
@@ -78,15 +78,20 @@ FUNC_CALL_TEMPLATE: str = """
 import json
 
 
-if __name__ == "__main__":
-	# get args and kwargs from JSON
-	args: list = json.loads('{args}')
-	kwargs: dict = json.loads('{kwargs}')
+# get args and kwargs from JSON
 
-	# call the function
-	result = {func_name}(*args, **kwargs)
-	print(json.dumps(result))
-"""
+args: list = json.loads("""
+{args}
+""")
+
+kwargs: dict = json.loads("""
+{kwargs}
+""")
+
+# call the function
+result = {func_name}(*args, **kwargs)
+print(json.dumps(result))
+'''
 
 
 class _NoResultSentinel:
@@ -107,7 +112,7 @@ def safe_func_call(
     args: list,
     kwargs: dict,
     func_name: str = "f",
-    wasmtime_exec: str = WASMTIME_EXEC,
+    wasmtime_exec: str | None = None,
     wasm_rustpython_path: Path = WASM_RUSTPYTHON_PATH,
 ) -> tuple[Any, str, int]:
     """safely call a function in a WebAssembly RustPython environment."""

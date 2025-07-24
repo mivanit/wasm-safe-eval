@@ -1,9 +1,9 @@
 from pathlib import Path
+import platform
 import shutil
-import sys
 from importlib.resources import files
 
-from wasm_safe_eval._exceptions import RustPythonWasmNotFoundError
+from wasm_safe_eval._exceptions import RustPythonWasmNotFoundError, PlatformNotSupportedError, WasmtimeNotFoundError
 
 # Default paths
 WASMTIME_EXEC: str = str(Path.home() / ".wasmtime" / "bin" / "wasmtime")

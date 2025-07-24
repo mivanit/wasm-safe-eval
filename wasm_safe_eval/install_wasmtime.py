@@ -27,11 +27,20 @@ def main():
             msg += "\nHint: You can use WSL (Windows Subsystem for Linux) on Windows."
         raise PlatformNotSupportedError(msg)
     
+    cmd: str = "curl -sSf https://wasmtime.dev/install.sh | bash"
+
+    # check with the user
+    print("This will install the `wasmtime` binary for wasm-safe-eval package, via the following executed in shell:")
+    print(cmd)
+    print("You can also run this manually. Continue? [y/N]")
+    if input().strip().lower() != "y":
+        print("Installation aborted.")
+        sys.exit(0)
+
     # Run the official wasmtime installer
     print("Installing wasmtime...")
     print(_DIV)
     
-    cmd: str = "curl -sSf https://wasmtime.dev/install.sh | bash"
     print(f"$ {cmd}")
     print(_DIV)
     result: subprocess.CompletedProcess = subprocess.run(cmd, shell=True)
