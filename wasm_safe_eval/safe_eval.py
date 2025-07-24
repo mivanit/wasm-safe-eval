@@ -18,6 +18,7 @@ class SafeEvalResult(NamedTuple):
 
 def safe_eval(
     code: str,
+    timeout: int| None = None,
     wasmtime_exec: str | None = None,
     wasm_rustpython_path: Path = WASM_RUSTPYTHON_PATH,
 ) -> tuple[str, str, int]:
@@ -25,15 +26,15 @@ def safe_eval(
 
     # Parameters:
     - `code : str`
-                code to execute
+        code to execute
     - `wasmtime_exec : str`
-                (defaults to `WASMTIME_EXEC`)
+        (defaults to `WASMTIME_EXEC`)
     - `wasm_rustpython_path : Path`
-                (defaults to `WASM_RUSTPYTHON_PATH`)
+        (defaults to `WASM_RUSTPYTHON_PATH`)
 
     # Returns:
     - `tuple[str, str, int]`
-                (stdout, stderr, returncode)
+        (stdout, stderr, returncode)
     """
 
     # Get wasmtime executable if not provided
@@ -46,18 +47,16 @@ def safe_eval(
             )
 
     # Write code to temporary file for secure execution
-    temp_filename: str
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as tf:
-        tf.write(code)
-        tf.flush()
-        temp_filename = tf.name
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_file_path: Path = Path(temp_dir) / "script.py"
 
-    try:
+        temp_file_path.write_text(code, encoding="utf-8")
+
         cmd: list[str] = [
             wasmtime_exec,
-            # "--dir=-",  # do not expose any host directories
+            f"--dir={temp_dir}",
             str(wasm_rustpython_path),
-            temp_filename,
+            temp_file_path,
         ]
 
         completed: subprocess.CompletedProcess[str] = subprocess.run(
@@ -66,10 +65,7 @@ def safe_eval(
             capture_output=True,  # capture both stdout and stderr
             check=False,  # do not raise on non‑zero exit
         )
-    finally:
-        # Clean up temporary file
-        # os.unlink(temp_filename)
-        print(temp_filename)
+        
 
     return SafeEvalResult(
         stdout=completed.stdout,

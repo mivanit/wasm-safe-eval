@@ -37,7 +37,9 @@ from wasm_safe_eval import safe_eval
 result = safe_eval("""
 def main():
 	print("Hello, world!")
+main()
 """)
+result
 print(result.stdout)  # Should print "Hello, world!"
 ```
 
@@ -55,14 +57,11 @@ def add(a, b):
 """
 
 result = safe_func_call(
-#     code: str,
-    # args: list,
-    # kwargs: dict,
-    # func_name: str,
 	code = code,
 	args = [1, 2],
 	kwargs = {},
 	func_name = "add",	
 )
-assert result == 3
+assert result.result == 3
+assert result.returncode == 0
 ```
