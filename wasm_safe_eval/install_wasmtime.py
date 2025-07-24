@@ -47,18 +47,19 @@ def install_wasmtime(confirm: bool = False) -> None:
     print(_DIV)
 
     print(f"$ {cmd}")
-    print(_DIV)
+    print(_DIV, flush=True)
     result: subprocess.CompletedProcess = subprocess.run(cmd, shell=True)
 
     # check and return
     if result.returncode != 0:
-        print(_DIV, file=sys.stderr)
+        print(_DIV, file=sys.stderr, flush=True)
         raise RuntimeError(f"Failed to install wasmtime: {result.stderr}")
 
-    print(_DIV)
+    print(_DIV, flush=True)
     print(
         f"wasmtime installed successfully to: {_try_find_wasmtime() = }\n"
-        "You may need to restart your terminal for changes to take effect."
+        "You may need to restart your terminal for changes to take effect.",
+        flush=True,
     )
 
 
