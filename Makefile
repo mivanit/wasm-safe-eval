@@ -2,7 +2,7 @@ WASM_DIR = .wasm
 
 WASM_RUSTPYTHON = $(WASM_DIR)/RustPython
 
-WASM_RUSTPYTHON_BINARY = $(WASM_DIR)/rustpython.wasm
+WASM_RUSTPYTHON_BINARY = wasm_safe_eval/rustpython.wasm
 
 $(WASM_RUSTPYTHON):
 	mkdir -p $(WASM_RUSTPYTHON)
@@ -17,19 +17,16 @@ $(WASM_RUSTPYTHON_BINARY): $(WASM_RUSTPYTHON)
 .PHONY: dep-wasm-wasmtime
 dep-wasm-wasmtime:
 	@echo "Checking for wasmtime ..."
-	@wasmtime --version >/dev/null 2>&1 || ( \
-		echo "Installing wasmtime" && \
-		curl -sSf https://wasmtime.dev/install.sh | bash \
-	)
 	@wasmtime --version
 
+.PHONY: build
+build: $(WASM_RUSTPYTHON_BINARY)
+	@echo "Building wasm_safe_eval ..."
+	uv build
 
-.PHONY: dep-wasm
-dep-wasm: $(WASM_RUSTPYTHON_BINARY) dep-wasm-wasmtime
-	@echo "Install wasmtime and compile a python interpreter for it"
-	
-
-.PHONY: dep-wasm-clean
-dep-wasm-clean:
-	@echo "Clean up wasm stuff"
-	rm -rf $(WASM_RUSTPYTHON)
+.PHONY: check
+check:
+	uv run ruff check wasm_safe_eval --fix
+	uv run ruff format wasm_safe_eval
+	uv run mypy wasm_safe_eval
+	uv run pytest wasm_safe_eval/tests

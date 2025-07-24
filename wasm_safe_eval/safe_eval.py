@@ -9,7 +9,6 @@ from wasm_safe_eval._paths import WASM_RUSTPYTHON_PATH, _try_find_wasmtime
 from wasm_safe_eval._exceptions import WasmtimeNotFoundError
 
 
-
 def safe_eval(
     code: str,
     wasmtime_exec: str | None = None,
@@ -19,17 +18,17 @@ def safe_eval(
 
     # Parameters:
     - `code : str`
-		code to execute
+                code to execute
     - `wasmtime_exec : str`
-		(defaults to `WASMTIME_EXEC`)
+                (defaults to `WASMTIME_EXEC`)
     - `wasm_rustpython_path : Path`
-		(defaults to `WASM_RUSTPYTHON_PATH`)
+                (defaults to `WASM_RUSTPYTHON_PATH`)
 
     # Returns:
     - `tuple[str, str, int]`
-		(stdout, stderr, returncode)
+                (stdout, stderr, returncode)
     """
-    
+
     # Get wasmtime executable if not provided
     if wasmtime_exec is None:
         wasmtime_exec = _try_find_wasmtime()
@@ -41,11 +40,11 @@ def safe_eval(
 
     # Write code to temporary file for secure execution
     temp_filename: str
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tf:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as tf:
         tf.write(code)
         tf.flush()
         temp_filename = tf.name
-    
+
     try:
         cmd: list[str] = [
             wasmtime_exec,
@@ -53,7 +52,7 @@ def safe_eval(
             str(wasm_rustpython_path),
             temp_filename,
         ]
-        
+
         completed: subprocess.CompletedProcess[str] = subprocess.run(
             cmd,
             text=True,  # decode to str instead of bytes
