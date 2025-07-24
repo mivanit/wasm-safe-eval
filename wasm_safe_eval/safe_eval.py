@@ -1,18 +1,12 @@
 import json
+import os
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
-WASMTIME_EXEC: str = "~/.wasmtime/bin/wasmtime"
-WASM_RUSTPYTHON_PATH: Path = ".wasm/rustpython.wasm"
+from wasm_safe_eval._paths import WASM_RUSTPYTHON_PATH, WASMTIME_EXEC, _try_find_wasmtime
 
-
-def _expand_path(path: str) -> str:
-    """Expand the path, replacing `~` with the user's home directory."""
-    if path.startswith("~/"):
-        return str(Path.home() / path[2:])
-    else:
-        return path
 
 
 def safe_eval(
@@ -35,20 +29,40 @@ def safe_eval(
 		(stdout, stderr, returncode)
     """
 
-    cmd: list[str] = [
-        _expand_path(wasmtime_exec),  # expand the path to wasmtime executable
-        # "--dir=-", # do not expose any host directories
-        str(wasm_rustpython_path),
-        "-c",
-        code,
-    ]
-
-    completed: subprocess.CompletedProcess[str] = subprocess.run(
-        cmd,
-        text=True,  # decode to str instead of bytes
-        capture_output=True,  # capture both stdout and stderr
-        check=False,  # do not raise on non‑zero exit
-    )
+    # Check platform
+    _check_platform()
+    
+    # Find wasmtime if not explicitly provided
+    if wasmtime_exec == WASMTIME_EXEC:
+        wasmtime_exec = _find_wasmtime()
+    
+    # Check that rustpython.wasm exists
+    if not os.path.exists(wasm_rustpython_path):
+        raise FileNotFoundError(f"RustPython WASM file not found at: {wasm_rustpython_path}")
+    
+    # Write code to temporary file for secure execution
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tf:
+        tf.write(code)
+        tf.flush()
+        temp_filename = tf.name
+    
+    try:
+        cmd: list[str] = [
+            wasmtime_exec,
+            # "--dir=-",  # do not expose any host directories
+            str(wasm_rustpython_path),
+            temp_filename,
+        ]
+        
+        completed: subprocess.CompletedProcess[str] = subprocess.run(
+            cmd,
+            text=True,  # decode to str instead of bytes
+            capture_output=True,  # capture both stdout and stderr
+            check=False,  # do not raise on non‑zero exit
+        )
+    finally:
+        # Clean up temporary file
+        os.unlink(temp_filename)
 
     return completed.stdout, completed.stderr, completed.returncode
 
