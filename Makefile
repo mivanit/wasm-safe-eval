@@ -4,9 +4,14 @@ WASM_RUSTPYTHON = $(WASM_DIR)/RustPython
 
 WASM_RUSTPYTHON_BINARY = wasm_safe_eval/rustpython.wasm
 
+# Read the tag straight from pyproject.toml
+RUSTPYTHON_TAG := $(shell uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['rustpython-tag'])")
+
 $(WASM_RUSTPYTHON):
-	mkdir -p $(WASM_RUSTPYTHON)
-	git clone https://github.com/RustPython/RustPython.git $(WASM_RUSTPYTHON) --depth 1
+	git clone --depth 1 --branch $(RUSTPYTHON_TAG) \
+		--single-branch https://github.com/RustPython/RustPython.git \
+		$(WASM_RUSTPYTHON)
+	rm -rf $(WASM_RUSTPYTHON)/.git
 
 $(WASM_RUSTPYTHON_BINARY): $(WASM_RUSTPYTHON)
 	rustup target add wasm32-wasip1
@@ -24,9 +29,13 @@ build: $(WASM_RUSTPYTHON_BINARY)
 	@echo "Building wasm_safe_eval ..."
 	uv build
 
+.PHONY: clean
+clean:
+	rm -rf $(WASM_DIR)
+
 .PHONY: check
 check:
 	uv run ruff check wasm_safe_eval --fix
 	uv run ruff format wasm_safe_eval
 	uv run mypy wasm_safe_eval
-	uv run pytest wasm_safe_eval/tests
+	uv run pytest tests/

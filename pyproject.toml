@@ -5,6 +5,12 @@
 	readme = "README.md"
 	requires-python = ">=3.10"
 	dependencies = []
+	rustpython-tag = "2025-07-21-main-39"
+
+# see here for latest RustPython releases: https://github.com/RustPython/RustPython/tags
+# I previously had issues with getting the latest tag to compile and updating rust fixed this
+
+
 
 
 [dependency-groups]
@@ -13,9 +19,6 @@
 		"mypy",
 		"pytest",
 	]
-
-[tool.wasm-safe-eval]
-	rustpython-version = "0.3.0"
 
 [build-system]
 	requires = ["hatchling"]
