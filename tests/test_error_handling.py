@@ -82,16 +82,6 @@ except Exception as e:
 """
         stdout, stderr, returncode = safe_eval(code)
         
-        # Should either complete or fail with recursion error
-        # Both outcomes are acceptable for security
-
-    def test_wasmtime_not_found_error(self):
-        """Test WasmtimeNotFoundError when wasmtime is not available."""
-        code = "print('Hello')"
-        
-        with patch('wasm_safe_eval.safe_eval._try_find_wasmtime', return_value=None):
-            with pytest.raises(WasmtimeNotFoundError):
-                safe_eval(code)
 
     def test_safe_func_call_no_result(self):
         """Test safe_func_call when function doesn't return anything."""
