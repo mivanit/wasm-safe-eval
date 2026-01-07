@@ -16,7 +16,7 @@
 [dependency-groups]
 	dev = [
 		"ruff",
-		"mypy",
+		"ty",
 		"pytest",
 	]
 

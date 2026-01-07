@@ -75,7 +75,7 @@ def safe_eval(
     )
 
 
-FUNC_CALL_TEMPLATE: str = '''
+FUNC_CALL_TEMPLATE: str = """
 # implemented function
 # ==============================
 {func_code}
@@ -88,18 +88,14 @@ import json
 
 # get args and kwargs from JSON
 
-args: list = json.loads("""
-{args}
-""")
+args: list = json.loads({args})
 
-kwargs: dict = json.loads("""
-{kwargs}
-""")
+kwargs: dict = json.loads({kwargs})
 
 # call the function
 result = {func_name}(*args, **kwargs)
 print(json.dumps(result))
-'''
+"""
 
 
 class _NoResultSentinel:
@@ -136,8 +132,8 @@ def safe_func_call(
 
     code_augmented: str = FUNC_CALL_TEMPLATE.format(
         func_code=code,
-        args=json.dumps(args),
-        kwargs=json.dumps(kwargs),
+        args=repr(json.dumps(args)),
+        kwargs=repr(json.dumps(kwargs)),
         func_name=func_name,
     )
 

@@ -192,3 +192,102 @@ def analyze_list(data):
         assert result["average"] == 3.0
         assert result["min"] == 1
         assert result["max"] == 5
+
+
+class TestControlCharacterHandling:
+    """Test handling of control characters in args and kwargs."""
+
+    def test_newline_in_args(self):
+        """Test that newline characters in args are handled correctly."""
+        code = """
+def echo(data):
+    return data
+"""
+        result, stderr, returncode = safe_func_call(code, [["\n", "x"]], {}, "echo")
+
+        assert returncode == 0, f"Failed with: {stderr}"
+        assert result == ["\n", "x"]
+
+    def test_tab_in_args(self):
+        """Test that tab characters in args are handled correctly."""
+        code = """
+def echo(data):
+    return data
+"""
+        result, stderr, returncode = safe_func_call(code, ["\t"], {}, "echo")
+
+        assert returncode == 0, f"Failed with: {stderr}"
+        assert result == "\t"
+
+    def test_carriage_return_in_args(self):
+        """Test that carriage return characters in args are handled correctly."""
+        code = """
+def echo(data):
+    return data
+"""
+        result, stderr, returncode = safe_func_call(code, ["\r"], {}, "echo")
+
+        assert returncode == 0, f"Failed with: {stderr}"
+        assert result == "\r"
+
+    def test_mixed_control_characters(self):
+        """Test handling of mixed control characters."""
+        code = """
+def echo(data):
+    return data
+"""
+        test_data = {"line1": "hello\nworld", "tab": "a\tb", "cr": "x\ry"}
+        result, stderr, returncode = safe_func_call(code, [test_data], {}, "echo")
+
+        assert returncode == 0, f"Failed with: {stderr}"
+        assert result == test_data
+
+    def test_backslash_in_args(self):
+        """Test that backslash characters in args are handled correctly."""
+        code = """
+def echo(data):
+    return data
+"""
+        result, stderr, returncode = safe_func_call(code, ["path\\to\\file"], {}, "echo")
+
+        assert returncode == 0, f"Failed with: {stderr}"
+        assert result == "path\\to\\file"
+
+    def test_quotes_in_args(self):
+        """Test that quote characters in args are handled correctly."""
+        code = """
+def echo(data):
+    return data
+"""
+        result, stderr, returncode = safe_func_call(code, ['He said "hello"'], {}, "echo")
+
+        assert returncode == 0, f"Failed with: {stderr}"
+        assert result == 'He said "hello"'
+
+    def test_control_characters_in_kwargs(self):
+        """Test that control characters in kwargs are handled correctly."""
+        code = """
+def echo(data=None):
+    return data
+"""
+        test_data = "line1\nline2\ttabbed"
+        result, stderr, returncode = safe_func_call(code, [], {"data": test_data}, "echo")
+
+        assert returncode == 0, f"Failed with: {stderr}"
+        assert result == test_data
+
+    def test_complex_nested_control_characters(self):
+        """Test complex nested structures with control characters."""
+        code = """
+def process(items):
+    return items
+"""
+        test_data = [
+            {"key\twith\ttabs": "value\nwith\nnewlines"},
+            ["item\\with\\backslashes", "\"quoted\""],
+            "simple\r\nCRLF"
+        ]
+        result, stderr, returncode = safe_func_call(code, [test_data], {}, "process")
+
+        assert returncode == 0, f"Failed with: {stderr}"
+        assert result == test_data

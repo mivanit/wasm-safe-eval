@@ -33,9 +33,18 @@ build: $(WASM_RUSTPYTHON_BINARY)
 clean:
 	rm -rf $(WASM_DIR)
 
-.PHONY: check
-check:
-	uv run ruff check wasm_safe_eval --fix
-	uv run ruff format wasm_safe_eval
-	uv run mypy wasm_safe_eval
+.PHONY: test
+test:
 	uv run pytest tests/
+
+.PHONY: format
+format:
+	uv run ruff format wasm_safe_eval
+	uv run ruff check --fix wasm_safe_eval
+
+.PHONY: typing
+typing:
+	uv run ty check wasm_safe_eval
+
+.PHONY: check
+check: format typing test
